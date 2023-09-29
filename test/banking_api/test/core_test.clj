@@ -66,3 +66,40 @@
                                                {:amount 100})
                                  (test-handler))]
           (expect {:name "Mr. Black" :balance 100} (dissoc body :account-number)))))))
+
+(defexpect withdraw-money-test
+  (expecting
+    "Create an account"
+    (let [{:keys [body]} (-> (post-request "/account" {:name "Mr. Black"})
+                                    (test-handler))]
+      (expect {:name "Mr. Black" :balance 0} (dissoc body :account-number))
+      (expecting
+        "Deposit money"
+        (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/deposit")
+                                               {:amount 100})
+                                 (test-handler))]
+          (expect {:name "Mr. Black" :balance 100} (dissoc body :account-number))))
+      (expecting
+        "Withdraw money"
+        (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/withdraw")
+                                               {:amount 5})
+                                 (test-handler))]
+          (expect {:name "Mr. Black" :balance 95} (dissoc body :account-number))))
+      (expecting
+        "Try to withdraw negative amount of money"
+        (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/withdraw")
+                                               {:amount -5})
+                                 (test-handler))]
+          (expect "should be a positive int" (:message (first (:errors body))))))
+      (expecting
+        "Try to withdraw zero amount of money"
+        (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/withdraw")
+                                               {:amount 0})
+                                 (test-handler))]
+          (expect "should be a positive int" (:message (first (:errors body))))))
+      (expecting
+        "Try to withdraw more money than in current balance"
+        (let [{:keys [status]} (-> (post-request (str "/account/" (:account-number body) "/withdraw")
+                                               {:amount 100})
+                                 (test-handler))]
+          (expect 500 status))))))

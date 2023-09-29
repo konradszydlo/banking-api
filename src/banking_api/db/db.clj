@@ -1,5 +1,6 @@
 (ns banking-api.db.db
   (:require [banking-api.db.migration :as migration]
+            [banking-api.db.exceptions :as db-exceptions]
             [honey.sql :as sql]
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as connection]
@@ -43,9 +44,17 @@
   (when-let [result (execute db (deposit-sql table id data))]
     (find-by-id db table id)))
 
+(defn withdraw-money [db table id data]
+  (when-let [{:keys [balance]} (find-by-id db table id)]
+    (if (>= balance (:amount data))
+      (deposit-money db table id {:amount (- balance (:amount data))})
+      (db-exceptions/throw-insufficient-money-to-withdraw-exception (db-exceptions/insufficient-balance-to-withdraw id)))))
+
 (comment
   (find-by-id (banking-api.system/get-db) :account 1)
   (create-account (banking-api.system/get-db) :account {:name "Mr. Rabbit"})
+  (deposit-money (banking-api.system/get-db) :account 1 {:amount 150})
+  (withdraw-money (banking-api.system/get-db) :account 1 {:amount 5} )
   )
 
 

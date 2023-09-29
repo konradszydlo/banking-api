@@ -1,5 +1,8 @@
 (ns banking-api.router
-  (:require [malli.util :as mu]
+  (:require
+            [banking-api.db.db :as db]
+            [banking-api.middleware :as banking-middleware]
+            [malli.util :as mu]
             [muuntaja.core :as m]
             [reitit.coercion.malli]
             [reitit.dev.pretty :as pretty]
@@ -42,11 +45,9 @@
      [""
       {:get {:summary   "get account details"
              :responses {200 {:body AccountResponse}}
-             :handler   (fn [{{{:keys [id]} :path} :parameters}]
+             :handler   (fn [{{{:keys [id]} :path} :parameters :as request} ]
                           {:status 200
-                           :body {:account-number id
-                                  :balance        (+ 10 id)
-                                  :name (str "account " id)}})}}]]]])
+                           :body (db/find-by-id (get-in request [:app-config :db]) :account id)})}}]]]])
 
 (defn ^:private router
   []
@@ -84,7 +85,7 @@
                          coercion/coerce-request-middleware]}}))
 
 (defn ring-handler
-  []
+  [app-config]
   (ring/ring-handler (router)
                      (ring/routes
                        (swagger-ui/create-swagger-ui-handler
@@ -92,12 +93,14 @@
                           :config {:validatorUrl nil
                                    :urls [{:name "swagger", :url "swagger.json"}]
                                    :operationsSorter "alpha"}})
-                       (ring/create-default-handler))))
+                       (ring/create-default-handler))
+                     {:middleware [[banking-middleware/app-config-middleware app-config] ;; theses middlewares are applied before any other middleware. They are "global" so to speak...
+                                   ]}))
 
 (defn start
   [{{:keys [jetty]} :runtime-config :as app-config}]
   (jetty/run-jetty
-    (ring-handler)
+    (ring-handler app-config)
     (merge jetty {:allow-null-path-info true
                   :send-server-version? false
                   :send-date-header? false

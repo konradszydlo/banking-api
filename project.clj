@@ -3,6 +3,8 @@
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.11.1"]
+                 [com.github.seancorfield/honeysql "2.4.1066"]
+                 [com.github.seancorfield/next.jdbc "1.3.894"]
                  [com.zaxxer/HikariCP "5.0.1"]
                  [club.donutpower/system "0.0.165"]
                  [fi.metosin/reitit "0.7.0-alpha6"]

@@ -3,6 +3,11 @@
             [banking-api.router :as router]
             [donut.system :as ds]))
 
+(def system-atom (atom []))
+
+(defn get-db []
+  (get-in @system-atom [::ds/instances :app-config :db]))
+
 (def ^:private base-system
   {::ds/defs
    {:env {}

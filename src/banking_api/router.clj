@@ -95,7 +95,7 @@
                        (ring/create-default-handler))))
 
 (defn start
-  [{:keys [jetty] :as app-config}]
+  [{{:keys [jetty]} :runtime-config :as app-config}]
   (jetty/run-jetty
     (ring-handler)
     (merge jetty {:allow-null-path-info true

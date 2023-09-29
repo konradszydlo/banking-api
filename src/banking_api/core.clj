@@ -1,10 +1,11 @@
 (ns banking-api.core
   {:author "Konrad Szydlo"}
-  (:require [banking-api.router :as router])
+  (:require [banking-api.system]
+            [donut.system :as ds])
   (:gen-class))
 
 (defn start []
-  (router/start {:jetty {:port 3000}})
+  (ds/start :local)
   (println "server running in port 3000"))
 
 (defn -main

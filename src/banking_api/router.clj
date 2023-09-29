@@ -31,6 +31,13 @@
    [:name :string]
    [:balance int?]])
 
+(def AuditResponse
+  [:map
+   [:sequence int?]
+   [:description :string]
+   [:credit {:optional true} [:maybe [int?]]]
+   [:debit {:optional true} [:maybe [int?]]]])
+
 (defn ^:private routes
   []
   [["/swagger.json"
@@ -54,6 +61,11 @@
              :handler   (fn [{{{:keys [id]} :path} :parameters :as request} ]
                           {:status 200
                            :body (db/find-by-id (get-in request [:app-config :db]) :account id)})}}]
+     ["/audit"
+      {:get {:summary   "get account audit"
+             :handler   (fn [{{{:keys [id]} :path} :parameters :as request} ]
+                          {:status 200
+                           :body (db/find-audits-for-account-by-id (get-in request [:app-config :db]) :audit id)})}}]
      ["/deposit"
       {:post {:summary   "deposit money to account"
               :responses {201 {:body AccountResponse}}

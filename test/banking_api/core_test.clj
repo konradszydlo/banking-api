@@ -1,5 +1,5 @@
 (ns banking-api.core-test
-  (:require [banking-api.core :as sut]
+  (:require [banking-api.router :as banking-router]
             [cheshire.core :as json]
             [clojure.java.io :as io]
             [expectations.clojure.test :as t :refer [defexpect expect expecting]]
@@ -13,7 +13,7 @@
 
 (defn- test-handler
   [request]
-  (let [handler sut/app
+  (let [handler (banking-router/ring-handler)
         response (handler request)]
     (update response :body parse-json)))
 

@@ -102,8 +102,7 @@
         (let [sender-account (first (filter #(= id (:account-number %)) accounts))]
           ;;; The resulting balance of the sending account should not fall below zero.
           (if (>= (- (:balance sender-account) (:amount data)) 0)
-            ;;; TODO in sql transaction
-            (do
+            (jdbc/with-transaction [tx db]
               (move-money-from db table id data)
               (move-money-to db table (:account-number data) id data)
               (find-by-id db table id))

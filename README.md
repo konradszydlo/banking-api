@@ -25,6 +25,14 @@ You can send CURL requests for endpoints e.g.
 
 ## Usage
 
+### Database
+
+The application stores account data in a DB.
+
+For convenience there is a docker-compose in `scripts/docker/banking`. Start database from this directory.
+
+`docker-compose up`
+
 ### Testing
 
 #### Single test run

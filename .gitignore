@@ -13,3 +13,4 @@ pom.xml.asc
 .hg/
 .idea
 banking-api.iml
+scripts/docker/banking/data/postgres

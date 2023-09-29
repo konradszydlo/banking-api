@@ -61,11 +61,17 @@
                                  (test-handler))]
           (expect "should be a positive int" (:message (first (:errors body))))))
       (expecting
-        "Deposit money"
+        "Deposit money to new account"
         (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/deposit")
                                                {:amount 100})
                                  (test-handler))]
-          (expect {:name "Mr. Black" :balance 100} (dissoc body :account-number)))))))
+          (expect {:name "Mr. Black" :balance 100} (dissoc body :account-number))))
+      (expecting
+        "Deposit money to account with existing balance"
+        (let [{:keys [body]} (-> (post-request (str "/account/1/deposit")
+                                               {:amount 100})
+                                 (test-handler))]
+          (expect {:name "First account" :balance 110} (dissoc body :account-number)))))))
 
 (defexpect withdraw-money-test
   (expecting
@@ -80,11 +86,17 @@
                                  (test-handler))]
           (expect {:name "Mr. Black" :balance 100} (dissoc body :account-number))))
       (expecting
-        "Withdraw money"
+        "Withdraw money from new account"
         (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/withdraw")
                                                {:amount 5})
                                  (test-handler))]
           (expect {:name "Mr. Black" :balance 95} (dissoc body :account-number))))
+      (expecting
+        "Withdraw money from existing account"
+        (let [{:keys [body]} (-> (post-request (str "/account/1/withdraw")
+                                               {:amount 5})
+                                 (test-handler))]
+          (expect {:name "First account" :balance 5} (dissoc body :account-number))))
       (expecting
         "Try to withdraw negative amount of money"
         (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/withdraw")
@@ -102,4 +114,55 @@
         (let [{:keys [status]} (-> (post-request (str "/account/" (:account-number body) "/withdraw")
                                                {:amount 100})
                                  (test-handler))]
+          (expect 500 status))))))
+
+(defexpect transfer-money-test
+  (expecting
+    "Create an account"
+    (let [{:keys [body]} (-> (post-request "/account" {:name "Mr. Black"})
+                                    (test-handler))]
+      (expect {:name "Mr. Black" :balance 0} (dissoc body :account-number))
+      (expecting
+        "Deposit money"
+        (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/deposit")
+                                               {:amount 100})
+                                 (test-handler))]
+          (expect {:name "Mr. Black" :balance 100} (dissoc body :account-number))))
+      (expecting
+        "Transfer money from new account to first/seeded account"
+        (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/send")
+                                               {:amount 40
+                                                :account-number 1})
+                                 (test-handler))]
+          (expect {:name "Mr. Black" :balance 60} (dissoc body :account-number))
+          (expecting
+            "find sender account"
+            (let [{:keys [status body]} (-> (mock/request :get "/account/1")
+                                                         (test-handler))]
+              (expect {:account-number 1 :balance 50 :name "First account"} body)))
+          (expecting
+            "find receiver account"
+            (let [{:keys [status body]} (-> (mock/request :get (str "/account/" (:account-number body)))
+                                            (test-handler))]
+              (expect {:balance 60 :name "Mr. Black"} (dissoc body :account-number))))))
+      (expecting
+        "sending more than current balance"
+        (let [{:keys [status]} (-> (post-request (str "/account/" (:account-number body) "/send")
+                                                 {:amount         200
+                                                  :account-number 1})
+                                   (test-handler))]
+          (expect 500 status)))
+      (expecting
+        "One account does not exist"
+        (let [{:keys [status]} (-> (post-request (str "/account/" (:account-number body) "/send")
+                                                 {:amount         200
+                                                  :account-number 999999999999})
+                                   (test-handler))]
+          (expect 500 status)))
+      (expecting
+        "Sending to itself"
+        (let [{:keys [status]} (-> (post-request "/account/1/send"
+                                                 {:amount         200
+                                                  :account-number 1})
+                                   (test-handler))]
           (expect 500 status))))))

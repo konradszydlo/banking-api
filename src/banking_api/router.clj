@@ -63,6 +63,17 @@
                             :body (db/deposit-money (:db app-config) :account
                                                     (get-in request [:parameters :path :id])
                                                     body-params)})}}]
+     ["/send"
+      {:post {:summary   "send money from one account to another"
+              :responses {201 {:body AccountResponse}}
+              :parameters {:body [:map
+                                  [:amount pos-int?]
+                                  [:account-number pos-int?]]}
+              :handler   (fn [{:keys [app-config body-params] :as request}]
+                           {:status 201
+                            :body (db/send-money (:db app-config) :account
+                                                 (get-in request [:parameters :path :id])
+                                                 body-params)})}}]
      ["/withdraw"
       {:post {:summary   "withdraw money from an account"
               :responses {201 {:body AccountResponse}}
@@ -71,8 +82,7 @@
                            {:status 201
                             :body (db/withdraw-money (:db app-config) :account
                                                      (get-in request [:parameters :path :id])
-                                                     body-params)})}}]
-     ]]])
+                                                     body-params)})}}]]]])
 
 (defn ^:private router
   []

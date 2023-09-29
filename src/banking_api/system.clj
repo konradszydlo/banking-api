@@ -39,3 +39,9 @@
 (defmethod ds/named-system :local
   [_]
   (ds/system :base {[:env] (load-config :local)}))
+
+(defmethod ds/named-system :test
+  [_]
+  (ds/system :base {[:env] (load-config :test)
+                    [:app-config :router] ::disabled
+                    [:app-config :runtime-config] (ds/ref [:env :runtime-config])}))

@@ -41,6 +41,12 @@
            :handler (swagger/create-swagger-handler)}}]
    ["/account"
     {:tags #{"account"}}
+    ["" {:post {:summary   "create an account"
+                :responses {201 {:body AccountResponse}}
+                :parameters {:body [:map [:name string?]]}
+                :handler   (fn [{:keys [app-config body-params] :as request}]
+                             {:status 201
+                              :body (db/create-account (:db app-config) :account body-params)})}}]
     ["/:id" {:parameters {:path account-id}}
      [""
       {:get {:summary   "get account details"

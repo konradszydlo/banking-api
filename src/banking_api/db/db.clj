@@ -3,11 +3,12 @@
             [honey.sql :as sql]
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as connection]
+            [honey.sql.helpers :as helpers :refer [insert-into values returning]]
             [next.jdbc.result-set :refer [as-unqualified-kebab-maps]])
   (:import
     [com.zaxxer.hikari HikariDataSource]))
 
-(defn select [datasource sql]
+(defn- select [datasource sql]
   (when-let [results (jdbc/execute-one! datasource sql {:builder-fn as-unqualified-kebab-maps})]
     results))
 
@@ -17,8 +18,23 @@
                                             :where [:= :account_number id]}))]
     result))
 
+(defn- create-sql [table account]
+  (-> (insert-into table)
+      (values [account])
+      (returning :account_number :name :balance)
+      sql/format))
+
+(defn- execute [datasource sql]
+  (when-let [results (jdbc/execute-one! datasource sql {:builder-fn as-unqualified-kebab-maps})]
+    results))
+
+(defn create-account [db table data]
+  (when-let [result (execute db (create-sql table data))]
+    result))
+
 (comment
   (find-by-id (banking-api.system/get-db) :account 1)
+  (create-account (banking-api.system/get-db) :account {:name "Mr. Rabbit"})
   )
 
 

@@ -5,6 +5,10 @@
   :dependencies [[org.clojure/clojure "1.11.1"]]
   :main ^:skip-aot banking-api.core
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all
+  :profiles {:dev {:dependencies [[com.github.seancorfield/expectations "2.0.165"]
+                                  [lambdaisland/kaocha "1.86.1355"]]}
+             :uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}}
+  :aliases {"tdd" ["run" "-m" "kaocha.runner" "--watch"]
+            "kaocha" ["run" "-m" "kaocha.runner"]}
   )

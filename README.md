@@ -23,7 +23,7 @@ Once you have application running go to http://localhost:3000/index.htm
 
 #### Single test run
 
-`lein test`
+`lein kaocha`
 
 #### Auto-testing
 

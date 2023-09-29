@@ -17,6 +17,12 @@ The application exposes Swagger to document and test the API.
 
 Once you have application running go to http://localhost:3000/index.htm
 
+## CURL
+
+You can send CURL requests for endpoints e.g.
+
+`curl -X 'GET' 'http://localhost:3000/account/1' -H 'accept: application/json'`
+
 ## Usage
 
 ### Testing

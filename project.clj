@@ -5,6 +5,7 @@
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [fi.metosin/reitit "0.7.0-alpha6"]
                  [metosin/jsonista "0.3.7"]
+                 [metosin/ring-swagger-ui "5.0.0-alpha.0"]
                  [ring/ring-jetty-adapter "1.9.6"]]
   :main ^:skip-aot banking-api.core
   :target-path "target/%s"

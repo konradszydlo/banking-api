@@ -11,6 +11,8 @@
             [reitit.ring.middleware.exception :as exception]
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.ring.spec :as spec]
+            [reitit.swagger :as swagger]
+            [reitit.swagger-ui :as swagger-ui]
             [ring.adapter.jetty :as jetty])
   (:gen-class))
 
@@ -29,7 +31,13 @@
 (def app
   (ring/ring-handler
     (ring/router
-      [["/account"
+      [["/swagger.json"
+        {:get {:no-doc true
+               :swagger {:info {:title "banking-api"
+                                :description "swagger docs with [malli](https://github.com/metosin/malli) and reitit-ring"
+                                :version "0.0.1"}}
+               :handler (swagger/create-swagger-handler)}}]
+       ["/account"
         {:tags #{"account"}}
         ["/:id" {:parameters {:path account-id}}
          [""
@@ -54,7 +62,9 @@
                            ;; malli options
                            :options nil})
               :muuntaja m/instance
-              :middleware [;; query-params & form-params
+              :middleware [;; swagger
+                           swagger/swagger-feature
+                           ;; query-params & form-params
                            parameters/parameters-middleware
                            ;; content-negotiation
                            muuntaja/format-negotiate-middleware
@@ -69,6 +79,11 @@
                            ;; coercing request parameters
                            coercion/coerce-request-middleware]}})
     (ring/routes
+      (swagger-ui/create-swagger-ui-handler
+          {:path "/"
+           :config {:validatorUrl nil
+                    :urls [{:name "swagger", :url "swagger.json"}]
+                    :operationsSorter "alpha"}})
       (ring/create-default-handler))))
 
 (defn start []

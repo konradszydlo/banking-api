@@ -53,7 +53,17 @@
              :responses {200 {:body AccountResponse}}
              :handler   (fn [{{{:keys [id]} :path} :parameters :as request} ]
                           {:status 200
-                           :body (db/find-by-id (get-in request [:app-config :db]) :account id)})}}]]]])
+                           :body (db/find-by-id (get-in request [:app-config :db]) :account id)})}}]
+     ["/deposit"
+      {:post {:summary   "deposit money to account"
+              :responses {201 {:body AccountResponse}}
+              :parameters {:body [:map [:amount pos-int?]]}
+              :handler   (fn [{:keys [app-config body-params] :as request}]
+                           {:status 201
+                            :body (db/deposit-money (:db app-config) :account
+                                                    (get-in request [:parameters :path :id])
+                                                    body-params)})}}]
+     ]]])
 
 (defn ^:private router
   []

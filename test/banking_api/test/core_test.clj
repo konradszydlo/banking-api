@@ -27,9 +27,9 @@
         response (handler request)]
     (update response :body parse-json)))
 
-(defn- post-request []
-  (-> (mock/request :post "/account" )
-      (mock/json-body {:name "Mr. Black"} )
+(defn- post-request [url payload]
+  (-> (mock/request :post url)
+      (mock/json-body payload)
       (assoc :app-config (app-config))))
 
 (defexpect find-account-by-id-test
@@ -43,7 +43,26 @@
 (defexpect create-account-test
   (expecting
     "Create an account"
-    (let [{:keys [status body]} (-> (post-request)
+    (let [{:keys [status body]} (-> (post-request "/account" {:name "Mr. Black"})
                                     (test-handler))]
       (expect 201 status)
       (expect {:name "Mr. Black" :balance 0} (dissoc body :account-number)))))
+
+(defexpect deposit-money-test
+  (expecting
+    "Create an account"
+    (let [{:keys [body]} (-> (post-request "/account" {:name "Mr. Black"})
+                             (test-handler))]
+      (expect {:name "Mr. Black" :balance 0} (dissoc body :account-number))
+      (expecting
+        "Allow to deposit only positive amount of money"
+        (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/deposit")
+                                               {:amount -100})
+                                 (test-handler))]
+          (expect "should be a positive int" (:message (first (:errors body))))))
+      (expecting
+        "Deposit money"
+        (let [{:keys [body]} (-> (post-request (str "/account/" (:account-number body) "/deposit")
+                                               {:amount 100})
+                                 (test-handler))]
+          (expect {:name "Mr. Black" :balance 100} (dissoc body :account-number)))))))

@@ -1,0 +1,9 @@
+{:secrets        {:db {:dbtype   "postgresql"
+                       :dbname   "bankingdb"
+                       :host     "localhost"
+                       :port     5432
+                       :username "banking"
+                       :password "api"}}
+ :runtime-config {:db    {:migration-locations ["db/migration/postgresql/schema"]}
+                  :environment :local
+                  :jetty {:port 3000}}}

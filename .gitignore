@@ -14,3 +14,5 @@ pom.xml.asc
 .idea
 banking-api.iml
 scripts/docker/banking/data/postgres
+resources/config/config-local.edn
+resources/config/config-test.edn

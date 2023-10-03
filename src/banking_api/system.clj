@@ -1,6 +1,10 @@
 (ns banking-api.system
-  (:require [banking-api.db.db :as db]
+  (:require [aero.core :refer [read-config]]
+            [banking-api.config.config :as config]
+            [banking-api.db.db :as db]
             [banking-api.router :as router]
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
             [donut.system :as ds]))
 
 (def system-atom (atom []))
@@ -21,16 +25,22 @@
                                :config {:db (ds/ref [:app-config :db])
                                         :runtime-config (ds/ref [:env :runtime-config])}}}}})
 
+(defn ^:private validate-config
+  [config-file config]
+  (log/infof "Validating '%s' to make sure it's correct" config-file)
+  (if-let [errors (config/validate config)]
+    (let [message (format "Bad '%s'! Errors are '%s'." config-file errors)]
+      (throw (ex-info message {:message message :data {:message message :config-file config-file :errors errors}})))
+    config))
+
 (defn ^:private load-config
   [environment]
-  {:secrets        {:db {:dbtype   "postgresql"
-                         :dbname   "banking_test"
-                         :host     "localhost"
-                         :port     5432
-                         :username "banking"
-                         :password "api"}}
-   :runtime-config {:db    {:migration-locations ["db/migration/postgresql/schema" "db/migration/postgresql/fixtures"]}
-                    :jetty {:port 3000}}})
+  (let [config-file (str "config/config" (when-not (= :production environment) (str "-" (name environment))) ".edn")]
+    (log/infof "Loading config file '%s'." config-file)
+    (->> (io/resource config-file)
+         (read-config)
+         (config/apply-defaults)
+         (validate-config config-file))))
 
 (defmethod ds/named-system :base
   [_]
